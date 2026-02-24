@@ -71,7 +71,7 @@ class KMLVisualizer {
 
             // List of KML files to load (you can expand this list)
             const kmlFiles = [
-                'input_folder/Trip Start from 2024.kml'
+                'Footprint.kml'
                 // Add more files here as needed
             ];
 
@@ -106,7 +106,10 @@ class KMLVisualizer {
             throw new Error(`Failed to fetch ${filePath}: ${response.status}`);
         }
 
-        const kmlText = await response.text();
+        let kmlText = await response.text();
+        // toGeoJSON uses getElementsByTagName() which does not match namespaced elements.
+        // Strip default KML namespace so Placemark/Point/LineString etc. are found.
+        kmlText = kmlText.replace(/\s*xmlns="http:\/\/www\.opengis\.net\/kml\/2\.2"/g, '');
         const parser = new DOMParser();
         const kmlDoc = parser.parseFromString(kmlText, 'text/xml');
 
@@ -157,7 +160,9 @@ class KMLVisualizer {
             
             reader.onload = (e) => {
                 try {
-                    const kmlText = e.target.result;
+                    let kmlText = e.target.result;
+                    // toGeoJSON does not handle namespaced KML; strip default namespace
+                    kmlText = kmlText.replace(/\s*xmlns="http:\/\/www\.opengis\.net\/kml\/2\.2"/g, '');
                     const parser = new DOMParser();
                     const kmlDoc = parser.parseFromString(kmlText, 'text/xml');
                     
